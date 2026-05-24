@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4d03f" />
+  <title>Song Swap</title>
+  <style>
+    :root {
+      --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial,
+        sans-serif;
+      --yellow: #f4d03f;
+      --yellow-mid: #f0b04a;
+      --yellow-deep: #eb9650;
+      --coral: #e07a5f;
+      --label: #1d1d1f;
+      --secondary-label: rgba(60, 60, 67, 0.62);
+      --tertiary-label: rgba(60, 60, 67, 0.48);
+      --separator: rgba(60, 60, 67, 0.12);
+      --hairline: rgba(60, 60, 67, 0.08);
+      --material: rgba(255, 255, 255, 0.76);
+      --material-thick: rgba(255, 255, 255, 0.9);
+      --tint-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+      --control-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+      --radius-card: 22px;
+      --radius-pill: 1000px;
+      --radius-icon: 12px;
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+      --ease-out: cubic-bezier(0.17, 0.84, 0.44, 1);
+      --column-max: 420px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: var(--sf);
+      color: var(--label);
+      background: var(--yellow);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background 0.55s var(--ease);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body.is-playing {
+      background: linear-gradient(165deg, var(--yellow) 0%, var(--yellow-mid) 45%, var(--yellow-deep) 78%, var(--coral) 100%);
+      background-size: 140% 140%;
+      animation: gradientShift 14s var(--ease) infinite;
+    }
+
+    @keyframes gradientShift {
+      0%,
+      100% {
+        background-position: 0% 30%;
+      }
+      50% {
+        background-position: 100% 70%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.is-playing {
+        animation: none;
+        background: linear-gradient(165deg, var(--yellow) 0%, var(--yellow-mid) 50%, var(--yellow-deep) 100%);
+        background-size: 100% 100%;
+      }
+
+      .bars .bar {
+        animation: none !important;
+        transform: scaleY(0.4);
+        opacity: 0.75;
+      }
+    }
+
+    #yt-host {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      left: -9999px;
+      top: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: var(--column-max);
+      min-height: 100dvh;
+      padding: max(1.125rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+        max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding-bottom: 0.125rem;
+    }
+
+    .mark-wrap {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-icon);
+      display: grid;
+      place-items: center;
+      background: var(--material);
+      border: 0.5px solid var(--hairline);
+      box-shadow: var(--tint-shadow);
+      backdrop-filter: saturate(180%) blur(20px);
+    }
+
+    header .mark {
+      width: 18px;
+      height: 18px;
+      color: var(--label);
+    }
+
+    header h1 {
+      margin: 0;
+      font-family: var(--sf);
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.025em;
+      line-height: 1.12;
+      color: var(--label);
+    }
+
+    .tagline {
+      margin: 0;
+      padding: 0.5rem 1rem 1rem;
+      text-align: center;
+      font-size: 1.0625rem;
+      font-weight: 400;
+      line-height: 1.4;
+      letter-spacing: -0.011em;
+      color: var(--secondary-label);
+      max-width: 26rem;
+      margin-inline: auto;
+      flex-shrink: 0;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.375rem;
+      padding: 0.5rem 0 1.125rem;
+      min-height: 0;
+    }
+
+    .play-wrap {
+      position: relative;
+    }
+
+    .play-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, transparent 70%);
+      opacity: 0;
+      transform: scale(0.94);
+      transition: opacity 0.45s var(--ease-out), transform 0.45s var(--ease-out);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    body.is-playing .play-wrap::before {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+
+    button.play-pause {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: none;
+      background: var(--material-thick);
+      color: var(--label);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--control-shadow);
+      transition: transform 0.22s var(--ease-out), background 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out);
+      backdrop-filter: saturate(180%) blur(16px);
+    }
+
+    button.play-pause:hover:not(:disabled) {
+      transform: scale(1.02);
+      background: #fff;
+    }
+
+    button.play-pause:active:not(:disabled) {
+      transform: scale(0.97);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    body.is-playing button.play-pause {
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    button.play-pause:focus {
+      outline: none;
+    }
+
+    button.play-pause:focus-visible {
+      outline: 3px solid rgba(0, 122, 255, 0.45);
+      outline-offset: 3px;
+    }
+
+    button.play-pause:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    button.play-pause svg {
+      width: 38px;
+      height: 38px;
+    }
+
+    .reveal-panel {
+      width: 100%;
+      max-width: 19.5rem;
+      min-height: 5rem;
+      padding: 1rem 1.125rem;
+      border-radius: var(--radius-card);
+      background: var(--material);
+      border: 0.5px solid var(--separator);
+      box-shadow: var(--tint-shadow);
+      backdrop-filter: saturate(180%) blur(24px);
+      transition: background 0.35s var(--ease), box-shadow 0.35s var(--ease);
+    }
+
+    body.is-playing .reveal-panel {
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .reveal {
+      text-align: center;
+      min-height: 3.1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      width: 100%;
+    }
+
+    .reveal .placeholder {
+      font-size: 1rem;
+      font-weight: 400;
+      font-style: normal;
+      color: var(--tertiary-label);
+      line-height: 1.45;
+      letter-spacing: -0.011em;
+    }
+
+    body.is-playing .reveal .placeholder {
+      display: none;
+    }
+
+    .reveal .meta {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+      transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
+      pointer-events: none;
+    }
+
+    body.is-playing.has-meta .reveal .meta {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .reveal .title {
+      font-family: var(--sf);
+      font-weight: 600;
+      font-size: 1.1875rem;
+      margin: 0;
+      line-height: 1.25;
+      letter-spacing: -0.022em;
+      color: var(--label);
+    }
+
+    .reveal .artist {
+      margin: 0;
+      font-size: 0.9375rem;
+      font-weight: 400;
+      color: var(--secondary-label);
+      letter-spacing: -0.01em;
+    }
+
+    .error-banner {
+      margin-top: 0.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--label);
+      text-align: center;
+      max-width: 19.5rem;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 59, 48, 0.12);
+      border: 0.5px solid rgba(255, 59, 48, 0.22);
+      display: none;
+    }
+
+    .error-banner.visible {
+      display: block;
+    }
+
+    .bars {
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 5px;
+      height: 44px;
+    }
+
+    body.is-playing:not(.yt-paused) .bars {
+      display: flex;
+    }
+
+    .bars .bar {
+      width: 7px;
+      border-radius: 3px;
+      background: rgba(29, 29, 31, 0.35);
+      height: 100%;
+      transform-origin: bottom center;
+      animation: bounce 0.82s var(--ease) infinite;
+    }
+
+    body.is-playing:not(.yt-paused) .bars .bar {
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .bars .bar:nth-child(1) {
+      animation-delay: 0s;
+    }
+    .bars .bar:nth-child(2) {
+      animation-delay: 0.07s;
+    }
+    .bars .bar:nth-child(3) {
+      animation-delay: 0.14s;
+    }
+    .bars .bar:nth-child(4) {
+      animation-delay: 0.21s;
+    }
+    .bars .bar:nth-child(5) {
+      animation-delay: 0.28s;
+    }
+
+    @keyframes bounce {
+      0%,
+      100% {
+        transform: scaleY(0.3);
+      }
+      50% {
+        transform: scaleY(1);
+      }
+    }
+
+    footer {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.875rem;
+      padding-top: 0.375rem;
+    }
+
+    .counter {
+      text-align: center;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: -0.006em;
+      text-transform: none;
+      color: var(--secondary-label);
+    }
+
+    .counter-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-pill);
+      background: var(--material);
+      border: 0.5px solid var(--separator);
+      backdrop-filter: saturate(180%) blur(16px);
+      color: var(--secondary-label);
+    }
+
+    .completion {
+      display: none;
+      text-align: center;
+      font-size: 0.9375rem;
+      font-weight: 400;
+      line-height: 1.45;
+      margin: 0;
+      padding: 0.875rem 1rem;
+      border-radius: var(--radius-card);
+      color: var(--secondary-label);
+      background: var(--material);
+      border: 0.5px solid var(--separator);
+      backdrop-filter: saturate(180%) blur(24px);
+    }
+
+    body.exhausted .completion {
+      display: block;
+    }
+
+    body.exhausted .counter {
+      display: none;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5625rem;
+    }
+
+    button.ghost,
+    button.primary {
+      font-family: var(--sf);
+      font-weight: 600;
+      font-size: 1.0625rem;
+      letter-spacing: -0.022em;
+      border-radius: var(--radius-pill);
+      min-height: 3.125rem;
+      padding: 0.6875rem 1.125rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4375rem;
+      transition: transform 0.18s var(--ease-out), opacity 0.2s var(--ease), background 0.2s var(--ease),
+        box-shadow 0.2s var(--ease);
+      border: none;
+    }
+
+    button.ghost:focus,
+    button.primary:focus {
+      outline: none;
+    }
+
+    button.ghost:focus-visible,
+    button.primary:focus-visible {
+      outline: 3px solid rgba(0, 122, 255, 0.45);
+      outline-offset: 2px;
+    }
+
+    /* Prominent (Another Song): filled light — like iOS on tinted backgrounds */
+    button.ghost {
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--label);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), var(--control-shadow);
+    }
+
+    button.ghost:hover:not(:disabled) {
+      background: #fff;
+      transform: scale(1.01);
+    }
+
+    button.ghost:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+
+    /* Secondary filled (Shuffle again) */
+    button.primary {
+      background: rgba(29, 29, 31, 0.88);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: #1d1d1f;
+      transform: scale(1.01);
+    }
+
+    button.primary:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+
+    button.ghost:disabled,
+    button.primary:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button.ghost svg,
+    button.primary svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+      opacity: 0.88;
+    }
+
+    button.primary svg {
+      opacity: 1;
+    }
+
+    body.exhausted button#another {
+      display: none;
+    }
+
+    body.exhausted #shuffleAgain {
+      display: flex;
+    }
+
+    #shuffleAgain {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="yt-host"><div id="yt-player"></div></div>
+
+  <div class="shell">
+    <header>
+      <div class="mark-wrap" aria-hidden="true">
+        <svg class="mark" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M8 5v14l11-7L8 5z" />
+        </svg>
+      </div>
+      <h1>Song Swap</h1>
+    </header>
+
+    <p class="tagline">Got a silly song stuck in your head? Swap the track, save your sanity 🎵😅</p>
+
+    <main>
+      <section class="hero" aria-label="Now playing">
+        <div class="play-wrap">
+          <button type="button" class="play-pause" id="playPause" aria-label="Play">
+            <svg id="iconPlay" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M8 5v14l11-7L8 5z" />
+            </svg>
+            <svg id="iconPause" viewBox="0 0 24 24" aria-hidden="true" style="display: none">
+              <path fill="currentColor" d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="reveal-panel">
+          <div class="reveal">
+            <p class="placeholder">Tap play to find out…</p>
+            <div class="meta" id="meta" hidden>
+              <p class="title" id="trackTitle"></p>
+              <p class="artist" id="trackArtist"></p>
+            </div>
+          </div>
+        </div>
+        <p class="error-banner" id="errorBanner" role="alert"></p>
+
+        <div class="bars" aria-hidden="true">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p class="completion" id="completion">
+        You heard all 50 earworms in this round. Shuffle the deck for another spin through the pool.
+      </p>
+      <p class="counter"><span class="counter-pill" id="counter">50 songs remaining</span></p>
+      <div class="actions">
+        <button type="button" class="ghost" id="another" aria-label="Another song">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M4 8h11a4 4 0 0 1 0 8H9l2-2-1.4-1.4L5.8 16l4.2 4.2L11.4 19l-2-2h6a6 6 0 0 0 0-12H4V8zm0-4v4h2V4H4z"
+            />
+          </svg>
+          Another Song
+        </button>
+        <button type="button" class="primary" id="shuffleAgain" aria-label="Shuffle and play again">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M4 8h11a4 4 0 0 1 0 8H9l2-2-1.4-1.4L5.8 16l4.2 4.2L11.4 19l-2-2h6a6 6 0 0 0 0-12H4V8zm0-4v4h2V4H4z"
+            />
+          </svg>
+          Shuffle &amp; play again
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const POOL_SIZE = 50;
+
+    /** YouTube video `id` must be embeddable; replace rows from your PM sheet as needed. */
+    const SONGS = [
+      { id: "zWaymcVmJ-A", title: "Macarena", artist: "Los del Río" },
+      { id: "9bZkp7q19f0", title: "Gangnam Style", artist: "PSY" },
+      { id: "XqZsoesa55w", title: "Baby Shark", artist: "Pinkfong" },
+      { id: "CS9OO0S5w2k", title: "Y.M.C.A.", artist: "Village People" },
+      { id: "dQw4w9WgXcQ", title: "Never Gonna Give You Up", artist: "Rick Astley" },
+      { id: "jofNR_WkoCE", title: "What Does the Fox Say?", artist: "Ylvis" },
+      { id: "EK_LN3XEcnw", title: "Mambo No. 5", artist: "Lou Bega" },
+      { id: "ojULkWEUsPs", title: "Who Let the Dogs Out", artist: "Baha Men" },
+      { id: "dLDiFU7VMyA", title: "Barbie Girl", artist: "Aqua" },
+      { id: "8IEIozhXyW0", title: "The Ketchup Song (Aserejé)", artist: "Las Ketchup" },
+      { id: "mOYZaiDZ7Bk", title: "Cotton Eye Joe", artist: "Rednex" },
+      { id: "wZMKD_eKwPY", title: "Cha Cha Slide", artist: "DJ Casper" },
+      { id: "p3G5IXn0K7A", title: "The Hamster Dance Song", artist: "Hampton the Hamster" },
+      { id: "k9iYm9PEAHg", title: "Crazy Frog", artist: "Crazy Frog" },
+      { id: "68ugkg9RePc", title: "Blue (Da Ba Dee)", artist: "Eiffel 65" },
+      { id: "YbppFRFKCGo", title: "Dragostea Din Tei", artist: "O-Zone" },
+      { id: "WZJAIkmT3Rg", title: "Chicken Dance", artist: "Traditional" },
+      { id: "NHozn0TXFeQ", title: "MmmBop", artist: "Hanson" },
+      { id: "fWNaR-rxAic", title: "Call Me Maybe", artist: "Carly Rae Jepsen" },
+      { id: "kfVsfOSbJY0", title: "Friday", artist: "Rebecca Black" },
+      { id: "kffac_Fa7oX", title: "Baby", artist: "Justin Bieber ft. Ludacris" },
+      { id: "L0MK7qz13bU", title: "Let It Go", artist: "Idina Menzel" },
+      { id: "kaOIxll4LCA", title: "Hakuna Matata", artist: "From The Lion King" },
+      { id: "48Njk4PcdOM", title: "Mah Nà Mah Nà", artist: "The Muppets" },
+      { id: "H5dpBWlRANE", title: "Banana Boat Song (Day-O)", artist: "Harry Belafonte" },
+      { id: "2WUB77HdfJU", title: "Oops!... I Did It Again", artist: "Britney Spears" },
+      { id: "gJLIiF15wjQ", title: "Wannabe", artist: "Spice Girls" },
+      { id: "p86NPM4C628", title: "Livin' la Vida Loca", artist: "Ricky Martin" },
+      { id: "1G40isHpgN8", title: "Ai Se Eu Te Pego", artist: "Michel Teló" },
+      { id: "kJQP7kiw5Fk", title: "Despacito", artist: "Luis Fonsi ft. Daddy Yankee" },
+      { id: "7kypNIyELS0", title: "Lambada", artist: "Kaoma" },
+      { id: "cyLCGLC7EU4", title: "Dame Tu Cosita", artist: "El Chombo" },
+      { id: "0E00Zuayv9Q", title: "Pen-Pineapple-Apple-Pen", artist: "PIKOTARO" },
+      { id: "Cqd1Gvq-RBY", title: "Numa Numa", artist: "Gary Brolsma" },
+      { id: "vTIIMJ9tUc8", title: "Tunak Tunak Tun", artist: "Daler Mehndi" },
+      { id: "eQ34DSTjsLQ", title: "Jingle Bells", artist: "Super Simple Songs" },
+      { id: "CoCiE4IT_Sg", title: "If You're Happy and You Know It", artist: "Super Simple Songs" },
+      { id: "C-u5WLJ9Yk4", title: "...Baby One More Time", artist: "Britney Spears" },
+      { id: "-GPffhQtfGI", title: "MMMBop", artist: "Hanson" },
+      { id: "r7qovpFAEGw", title: "Old Town Road", artist: "Lil Nas X" },
+      { id: "Obi4iELWJ3Y", title: "Shalala Lala", artist: "Vengaboys" },
+      { id: "6Zbi0XmGtMw", title: "We Like to Party!", artist: "Vengaboys" },
+      { id: "ru0K8uYEZWw", title: "Can't Stop the Feeling!", artist: "Justin Timberlake" },
+      { id: "y6Sxv-sUYtM", title: "Happy", artist: "Pharrell Williams" },
+      { id: "vjW8wmF6VVE", title: "Watch Me (Whip/Nae Nae)", artist: "Silentó" },
+      { id: "4m48GxpuxR8", title: "Single Ladies (Put a Ring on It)", artist: "Beyoncé" },
+      { id: "xFrGuyw1V8s", title: "Dancing Queen", artist: "ABBA" },
+      { id: "Qx2gvHjNhQ0", title: "Axel F", artist: "Harold Faltermeyer" },
+      { id: "MtN1YnoL46Q", title: "The Duck Song", artist: "Bryant Oden" },
+      { id: "s4QYI8ieHWQ", title: "Peanut Butter Jelly", artist: "Buckwheat Boyz" },
+    ];
+
+    const byId = new Map(SONGS.map((s) => [s.id, s]));
+
+    function shuffleInPlace(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    let playedIds = new Set();
+    let blockedIds = new Set();
+    let queue = [];
+    let unlocked = false;
+    let player = null;
+    let currentVideoId = null;
+
+    const body = document.body;
+    const playPause = document.getElementById("playPause");
+    const iconPlay = document.getElementById("iconPlay");
+    const iconPause = document.getElementById("iconPause");
+    const meta = document.getElementById("meta");
+    const trackTitle = document.getElementById("trackTitle");
+    const trackArtist = document.getElementById("trackArtist");
+    const errorBanner = document.getElementById("errorBanner");
+    const counter = document.getElementById("counter");
+    const another = document.getElementById("another");
+    const shuffleAgain = document.getElementById("shuffleAgain");
+
+    function remainingCount() {
+      const avail = new Set();
+      for (const s of SONGS) {
+        if (!playedIds.has(s.id) && !blockedIds.has(s.id)) avail.add(s.id);
+      }
+      return avail.size;
+    }
+
+    function rebuildQueue() {
+      const ids = [];
+      const seen = new Set();
+      for (const s of SONGS) {
+        if (playedIds.has(s.id) || blockedIds.has(s.id) || seen.has(s.id)) continue;
+        seen.add(s.id);
+        ids.push(s.id);
+      }
+      queue = shuffleInPlace(ids);
+    }
+
+    function setError(msg) {
+      if (!msg) {
+        errorBanner.textContent = "";
+        errorBanner.classList.remove("visible");
+        return;
+      }
+      errorBanner.textContent = msg;
+      errorBanner.classList.add("visible");
+    }
+
+    function setExhausted(on) {
+      if (on) {
+        body.classList.add("exhausted");
+        another.disabled = true;
+      } else {
+        body.classList.remove("exhausted");
+        another.disabled = false;
+      }
+    }
+
+    function updateCounter() {
+      const n = remainingCount();
+      counter.textContent = n === 1 ? "1 song remaining" : `${n} songs remaining`;
+    }
+
+    function setPlayButtonUi(playing) {
+      if (playing) {
+        playPause.setAttribute("aria-label", "Pause");
+        iconPlay.style.display = "none";
+        iconPause.style.display = "block";
+      } else {
+        playPause.setAttribute("aria-label", "Play");
+        iconPlay.style.display = "block";
+        iconPause.style.display = "none";
+      }
+    }
+
+    function applyUiPlayingSurface(playing) {
+      if (playing) {
+        body.classList.add("is-playing");
+      } else {
+        body.classList.remove("is-playing");
+        body.classList.remove("has-meta");
+        meta.hidden = true;
+        currentVideoId = null;
+      }
+    }
+
+    function showTrack(song) {
+      trackTitle.textContent = song.title;
+      trackArtist.textContent = song.artist;
+      meta.hidden = false;
+      body.classList.add("has-meta");
+    }
+
+    function consumeNextId() {
+      if (queue.length === 0) rebuildQueue();
+      return queue.length ? queue.shift() : null;
+    }
+
+    function onQueueExhaustedAfterPlay() {
+      if (remainingCount() === 0 && queue.length === 0) {
+        setExhausted(true);
+        updateCounter();
+      }
+    }
+
+    function playFromUserGesture() {
+      if (!player) return;
+      if (body.classList.contains("exhausted")) return;
+
+      let nextId = consumeNextId();
+      if (!nextId) {
+        setExhausted(true);
+        updateCounter();
+        return;
+      }
+
+      playedIds.add(nextId);
+      updateCounter();
+      onQueueExhaustedAfterPlay();
+
+      unlocked = true;
+      setError("");
+      currentVideoId = nextId;
+      const song = byId.get(nextId);
+      if (song) showTrack(song);
+      player.loadVideoById(nextId);
+      applyUiPlayingSurface(true);
+      setPlayButtonUi(true);
+    }
+
+    function togglePlayPause() {
+      if (!player) return;
+      const exhausted = body.classList.contains("exhausted");
+
+      const state = player.getPlayerState();
+      if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+        return;
+      }
+
+      if (state === YT.PlayerState.PAUSED && currentVideoId) {
+        player.playVideo();
+        return;
+      }
+
+      if (!currentVideoId || state === YT.PlayerState.UNSTARTED || state === YT.PlayerState.CUED) {
+        if (exhausted && !currentVideoId) return;
+        if (!currentVideoId) {
+          playFromUserGesture();
+        } else {
+          unlocked = true;
+          player.playVideo();
+          applyUiPlayingSurface(true);
+          setPlayButtonUi(true);
+        }
+      }
+    }
+
+    function anotherSong() {
+      if (!player || body.classList.contains("exhausted")) return;
+      setError("");
+
+      if (!currentVideoId && !body.classList.contains("is-playing")) {
+        playFromUserGesture();
+        return;
+      }
+
+      if (remainingCount() === 0 && queue.length === 0) {
+        setExhausted(true);
+        updateCounter();
+        return;
+      }
+
+      let nextId = consumeNextId();
+      if (!nextId) {
+        player.stopVideo();
+        applyUiPlayingSurface(false);
+        setPlayButtonUi(false);
+        setExhausted(true);
+        updateCounter();
+        return;
+      }
+
+      playedIds.add(nextId);
+      updateCounter();
+      onQueueExhaustedAfterPlay();
+
+      const song = byId.get(nextId);
+      if (song) showTrack(song);
+      currentVideoId = nextId;
+      unlocked = true;
+      player.loadVideoById(nextId);
+      applyUiPlayingSurface(true);
+      setPlayButtonUi(true);
+    }
+
+    function shufflePlayAgain() {
+      playedIds = new Set();
+      blockedIds = new Set();
+      rebuildQueue();
+      setExhausted(false);
+      setError("");
+      currentVideoId = null;
+      if (player) player.stopVideo();
+      applyUiPlayingSurface(false);
+      setPlayButtonUi(false);
+      updateCounter();
+      unlocked = false;
+    }
+
+    function onPlayerStateChange(e) {
+      if (e.data === YT.PlayerState.PLAYING) {
+        body.classList.remove("yt-paused");
+        setPlayButtonUi(true);
+        applyUiPlayingSurface(true);
+      } else if (e.data === YT.PlayerState.PAUSED) {
+        body.classList.add("yt-paused");
+        setPlayButtonUi(false);
+      } else if (e.data === YT.PlayerState.ENDED) {
+        body.classList.add("yt-paused");
+        setPlayButtonUi(false);
+      } else if (e.data === YT.PlayerState.BUFFERING) {
+        body.classList.remove("yt-paused");
+      }
+    }
+
+    function onPlayerError() {
+      const badId = currentVideoId;
+      setError("Couldn't load the song — try another!");
+      if (badId) {
+        playedIds.delete(badId);
+        blockedIds.add(badId);
+      }
+      rebuildQueue();
+      updateCounter();
+
+      if (!unlocked) {
+        player.stopVideo();
+        applyUiPlayingSurface(false);
+        setPlayButtonUi(false);
+        return;
+      }
+
+      const nid = consumeNextId();
+      if (!nid) {
+        if (remainingCount() === 0) setExhausted(true);
+        player.stopVideo();
+        applyUiPlayingSurface(false);
+        setPlayButtonUi(false);
+        updateCounter();
+        return;
+      }
+
+      playedIds.add(nid);
+      updateCounter();
+      currentVideoId = nid;
+      const song = byId.get(nid);
+      if (song) showTrack(song);
+      player.loadVideoById(nid);
+      applyUiPlayingSurface(true);
+      setPlayButtonUi(true);
+      onQueueExhaustedAfterPlay();
+    }
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player("yt-player", {
+        width: "320",
+        height: "180",
+        playerVars: {
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1,
+        },
+        events: {
+          onStateChange: onPlayerStateChange,
+          onError: onPlayerError,
+        },
+      });
+    }
+
+    playPause.addEventListener("click", () => {
+      togglePlayPause();
+    });
+
+    another.addEventListener("click", () => {
+      anotherSong();
+    });
+
+    shuffleAgain.addEventListener("click", () => {
+      shufflePlayAgain();
+    });
+
+    rebuildQueue();
+    updateCounter();
+
+    const uniqueIds = new Set(SONGS.map((s) => s.id));
+    if (uniqueIds.size !== POOL_SIZE || SONGS.length !== POOL_SIZE) {
+      console.warn("SONGS must contain", POOL_SIZE, "unique video ids; got", SONGS.length, "entries,", uniqueIds.size, "unique.");
+    }
+  </script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
