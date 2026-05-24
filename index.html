@@ -3,31 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f4d03f" />
+  <meta name="theme-color" content="#0D3880" />
   <title>Song Swap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
+    /* Palette inspired by seek.com.au (SEEK Blue, SEEK Pink / magenta CTA, cool neutrals) */
     :root {
-      --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial,
-        sans-serif;
-      --yellow: #f4d03f;
-      --yellow-mid: #f0b04a;
-      --yellow-deep: #eb9650;
-      --coral: #e07a5f;
-      --label: #1d1d1f;
-      --secondary-label: rgba(60, 60, 67, 0.62);
-      --tertiary-label: rgba(60, 60, 67, 0.48);
-      --separator: rgba(60, 60, 67, 0.12);
-      --hairline: rgba(60, 60, 67, 0.08);
-      --material: rgba(255, 255, 255, 0.76);
-      --material-thick: rgba(255, 255, 255, 0.9);
-      --tint-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
-      --control-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
-      --radius-card: 22px;
-      --radius-pill: 1000px;
-      --radius-icon: 12px;
+      --font: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --seek-blue: #0d3880;
+      --seek-blue-soft: #e9eef9;
+      --seek-blue-mid: #3e63ad;
+      --seek-pink: #e60278;
+      --seek-pink-soft: #fde8f3;
+      --seek-slate: #2e3849;
+      --seek-page: #e8ecf2;
+      --seek-line: rgba(13, 56, 128, 0.12);
+      --label: #212121;
+      --secondary-label: rgba(46, 56, 73, 0.72);
+      --tertiary-label: rgba(46, 56, 73, 0.5);
+      --separator: rgba(13, 56, 128, 0.14);
+      --hairline: rgba(13, 56, 128, 0.1);
+      --surface: #ffffff;
+      --surface-muted: #f7f9fc;
+      --tint-shadow: 0 4px 20px rgba(13, 56, 128, 0.08);
+      --control-shadow: 0 2px 6px rgba(13, 56, 128, 0.1), 0 10px 22px rgba(13, 56, 128, 0.08);
+      --radius-card: 12px;
+      --radius-pill: 999px;
+      --radius-icon: 10px;
       --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
       --ease-out: cubic-bezier(0.17, 0.84, 0.44, 1);
-      --column-max: 420px;
+      --column-max: 440px;
     }
 
     *,
@@ -48,9 +55,9 @@
     }
 
     body {
-      font-family: var(--sf);
+      font-family: var(--font);
       color: var(--label);
-      background: var(--yellow);
+      background: var(--seek-page);
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -61,25 +68,30 @@
     }
 
     body.is-playing {
-      background: linear-gradient(165deg, var(--yellow) 0%, var(--yellow-mid) 45%, var(--yellow-deep) 78%, var(--coral) 100%);
-      background-size: 140% 140%;
-      animation: gradientShift 14s var(--ease) infinite;
+      background: linear-gradient(
+        135deg,
+        var(--seek-blue-soft) 0%,
+        var(--surface-muted) 40%,
+        var(--seek-pink-soft) 100%
+      );
+      background-size: 160% 160%;
+      animation: gradientShift 16s var(--ease) infinite;
     }
 
     @keyframes gradientShift {
       0%,
       100% {
-        background-position: 0% 30%;
+        background-position: 0% 40%;
       }
       50% {
-        background-position: 100% 70%;
+        background-position: 100% 60%;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
       body.is-playing {
         animation: none;
-        background: linear-gradient(165deg, var(--yellow) 0%, var(--yellow-mid) 50%, var(--yellow-deep) 100%);
+        background: linear-gradient(135deg, var(--seek-blue-soft) 0%, var(--surface-muted) 55%, var(--seek-pink-soft) 100%);
         background-size: 100% 100%;
       }
 
@@ -110,6 +122,19 @@
       display: flex;
       flex-direction: column;
       flex: 1;
+      background: var(--surface);
+    }
+
+    @media (min-width: 520px) {
+      body {
+        padding: 0.65rem max(1rem, env(safe-area-inset-right)) 1rem max(1rem, env(safe-area-inset-left));
+      }
+
+      .shell {
+        min-height: calc(100dvh - 1.65rem);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(13, 56, 128, 0.1);
+      }
     }
 
     header {
@@ -127,40 +152,41 @@
       border-radius: var(--radius-icon);
       display: grid;
       place-items: center;
-      background: var(--material);
-      border: 0.5px solid var(--hairline);
-      box-shadow: var(--tint-shadow);
-      backdrop-filter: saturate(180%) blur(20px);
+      background: var(--surface-muted);
+      border: 1px solid var(--seek-line);
     }
 
     header .mark {
-      width: 18px;
-      height: 18px;
-      color: var(--label);
+      width: 28px;
+      height: 28px;
+      display: block;
     }
 
     header h1 {
       margin: 0;
-      font-family: var(--sf);
+      font-family: var(--font);
       font-weight: 700;
-      font-size: 1.5rem;
-      letter-spacing: -0.025em;
-      line-height: 1.12;
-      color: var(--label);
+      font-size: 1.45rem;
+      letter-spacing: -0.028em;
+      line-height: 1.15;
+      color: var(--seek-blue);
     }
 
     .tagline {
       margin: 0;
-      padding: 0.5rem 1rem 1rem;
-      text-align: center;
-      font-size: 1.0625rem;
+      padding: 0.55rem 0.75rem 1rem;
+      text-align: left;
+      font-size: 1rem;
       font-weight: 400;
-      line-height: 1.4;
-      letter-spacing: -0.011em;
+      line-height: 1.47;
+      letter-spacing: -0.012em;
       color: var(--secondary-label);
       max-width: 26rem;
-      margin-inline: auto;
+      margin-inline: 0;
       flex-shrink: 0;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+      border-bottom: 1px solid var(--hairline);
+      padding-bottom: 1.05rem;
     }
 
     main {
@@ -190,7 +216,7 @@
       position: absolute;
       inset: -8px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(230, 2, 120, 0.16) 0%, transparent 70%);
       opacity: 0;
       transform: scale(0.94);
       transition: opacity 0.45s var(--ease-out), transform 0.45s var(--ease-out);
@@ -199,7 +225,7 @@
     }
 
     body.is-playing .play-wrap::before {
-      opacity: 0.55;
+      opacity: 1;
       transform: scale(1);
     }
 
@@ -207,30 +233,33 @@
       width: 96px;
       height: 96px;
       border-radius: 50%;
-      border: none;
-      background: var(--material-thick);
-      color: var(--label);
+      border: 2px solid var(--seek-line);
+      background: var(--surface);
+      color: var(--seek-blue);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: var(--control-shadow);
-      transition: transform 0.22s var(--ease-out), background 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out);
-      backdrop-filter: saturate(180%) blur(16px);
+      transition: transform 0.22s var(--ease-out), background 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out),
+        border-color 0.22s var(--ease-out);
     }
 
     button.play-pause:hover:not(:disabled) {
       transform: scale(1.02);
-      background: #fff;
+      border-color: rgba(13, 56, 128, 0.22);
+      background: var(--surface-muted);
     }
 
     button.play-pause:active:not(:disabled) {
       transform: scale(0.97);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 1px 4px rgba(13, 56, 128, 0.1);
     }
 
     body.is-playing button.play-pause {
-      background: rgba(255, 255, 255, 0.94);
+      background: var(--surface);
+      border-color: rgba(230, 2, 120, 0.35);
+      color: var(--seek-pink);
     }
 
     button.play-pause:focus {
@@ -238,7 +267,7 @@
     }
 
     button.play-pause:focus-visible {
-      outline: 3px solid rgba(0, 122, 255, 0.45);
+      outline: 3px solid rgba(230, 2, 120, 0.45);
       outline-offset: 3px;
     }
 
@@ -258,15 +287,16 @@
       min-height: 5rem;
       padding: 1rem 1.125rem;
       border-radius: var(--radius-card);
-      background: var(--material);
-      border: 0.5px solid var(--separator);
-      box-shadow: var(--tint-shadow);
-      backdrop-filter: saturate(180%) blur(24px);
-      transition: background 0.35s var(--ease), box-shadow 0.35s var(--ease);
+      background: var(--surface-muted);
+      border: 1px solid var(--hairline);
+      box-shadow: 0 2px 8px rgba(13, 56, 128, 0.04);
+      transition: background 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s var(--ease);
     }
 
     body.is-playing .reveal-panel {
-      background: rgba(255, 255, 255, 0.82);
+      background: var(--surface);
+      border-color: var(--separator);
+      box-shadow: var(--tint-shadow);
     }
 
     .reveal {
@@ -294,6 +324,10 @@
     }
 
     .reveal .meta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
       opacity: 0;
       transform: translateY(6px) scale(0.98);
       transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
@@ -306,36 +340,28 @@
     }
 
     .reveal .title {
-      font-family: var(--sf);
-      font-weight: 600;
-      font-size: 1.1875rem;
+      font-family: var(--font);
+      font-weight: 700;
+      font-size: 1.2rem;
       margin: 0;
       line-height: 1.25;
       letter-spacing: -0.022em;
       color: var(--label);
     }
 
-    .reveal .artist {
-      margin: 0;
-      font-size: 0.9375rem;
-      font-weight: 400;
-      color: var(--secondary-label);
-      letter-spacing: -0.01em;
-    }
-
     .error-banner {
       margin-top: 0.25rem;
       font-size: 0.8125rem;
       font-weight: 500;
-      color: var(--label);
+      color: var(--seek-slate);
       text-align: center;
       max-width: 19.5rem;
       margin-left: auto;
       margin-right: auto;
       padding: 0.5rem 0.75rem;
       border-radius: var(--radius-pill);
-      background: rgba(255, 59, 48, 0.12);
-      border: 0.5px solid rgba(255, 59, 48, 0.22);
+      background: rgba(230, 2, 120, 0.08);
+      border: 1px solid rgba(230, 2, 120, 0.22);
       display: none;
     }
 
@@ -357,15 +383,15 @@
 
     .bars .bar {
       width: 7px;
-      border-radius: 3px;
-      background: rgba(29, 29, 31, 0.35);
+      border-radius: 999px;
+      background: rgba(13, 56, 128, 0.22);
       height: 100%;
       transform-origin: bottom center;
       animation: bounce 0.82s var(--ease) infinite;
     }
 
     body.is-playing:not(.yt-paused) .bars .bar {
-      background: rgba(255, 255, 255, 0.85);
+      background: linear-gradient(180deg, var(--seek-pink), var(--seek-blue-mid));
     }
 
     .bars .bar:nth-child(1) {
@@ -419,10 +445,10 @@
       margin: 0 auto;
       padding: 0.35rem 0.75rem;
       border-radius: var(--radius-pill);
-      background: var(--material);
-      border: 0.5px solid var(--separator);
-      backdrop-filter: saturate(180%) blur(16px);
+      background: var(--surface-muted);
+      border: 1px solid var(--hairline);
       color: var(--secondary-label);
+      font-variant-numeric: tabular-nums;
     }
 
     .completion {
@@ -435,9 +461,8 @@
       padding: 0.875rem 1rem;
       border-radius: var(--radius-card);
       color: var(--secondary-label);
-      background: var(--material);
-      border: 0.5px solid var(--separator);
-      backdrop-filter: saturate(180%) blur(24px);
+      background: var(--surface-muted);
+      border: 1px solid var(--hairline);
     }
 
     body.exhausted .completion {
@@ -448,6 +473,16 @@
       display: none;
     }
 
+    .footer-whisper {
+      margin: 0;
+      padding: 0.25rem 0 0;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: var(--tertiary-label);
+    }
+
     .actions {
       display: flex;
       flex-direction: column;
@@ -456,7 +491,7 @@
 
     button.ghost,
     button.primary {
-      font-family: var(--sf);
+      font-family: var(--font);
       font-weight: 600;
       font-size: 1.0625rem;
       letter-spacing: -0.022em;
@@ -480,40 +515,42 @@
 
     button.ghost:focus-visible,
     button.primary:focus-visible {
-      outline: 3px solid rgba(0, 122, 255, 0.45);
+      outline: 3px solid rgba(230, 2, 120, 0.45);
       outline-offset: 2px;
     }
 
-    /* Prominent (Another Song): filled light — like iOS on tinted backgrounds */
+    /* SEEK-style magenta primary CTA (Another Song) */
     button.ghost {
-      background: rgba(255, 255, 255, 0.94);
-      color: var(--label);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), var(--control-shadow);
+      background: var(--seek-pink);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(230, 2, 120, 0.25), 0 10px 20px rgba(13, 56, 128, 0.12);
+      border: 1px solid transparent;
     }
 
     button.ghost:hover:not(:disabled) {
-      background: #fff;
-      transform: scale(1.01);
+      background: #cb0269;
+      transform: translateY(-1px);
     }
 
     button.ghost:active:not(:disabled) {
-      transform: scale(0.99);
+      transform: translateY(0);
     }
 
-    /* Secondary filled (Shuffle again) */
+    /* Slate secondary (shuffle again) — neutral SEEK tone */
     button.primary {
-      background: rgba(29, 29, 31, 0.88);
+      background: var(--seek-slate);
       color: #fff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      border: 1px solid transparent;
+      box-shadow: var(--control-shadow);
     }
 
     button.primary:hover:not(:disabled) {
-      background: #1d1d1f;
-      transform: scale(1.01);
+      background: #242e3f;
+      transform: translateY(-1px);
     }
 
     button.primary:active:not(:disabled) {
-      transform: scale(0.99);
+      transform: translateY(0);
     }
 
     button.ghost:disabled,
@@ -528,10 +565,6 @@
       width: 19px;
       height: 19px;
       flex-shrink: 0;
-      opacity: 0.88;
-    }
-
-    button.primary svg {
       opacity: 1;
     }
 
@@ -554,17 +587,33 @@
   <div class="shell">
     <header>
       <div class="mark-wrap" aria-hidden="true">
-        <svg class="mark" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M8 5v14l11-7L8 5z" />
+        <svg class="mark" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" role="presentation">
+          <circle cx="9.2" cy="10.2" r="3.95" fill="#ffffff" stroke="#0d3880" stroke-width="1.1" />
+          <circle cx="22.8" cy="10.2" r="3.95" fill="#ffffff" stroke="#0d3880" stroke-width="1.1" />
+          <ellipse cx="16" cy="15.2" rx="10.25" ry="9.05" fill="#ffffff" stroke="#0d3880" stroke-width="1.15" />
+          <ellipse cx="16" cy="17.6" rx="6.05" ry="4.95" fill="#f0f4fb" stroke="#0d3880" stroke-width="0.9" />
+          <ellipse cx="16" cy="16.9" rx="2.05" ry="1.65" fill="#0d3880" />
+          <circle cx="11.7" cy="13.55" r="1.38" fill="#0d3880" />
+          <circle cx="20.3" cy="13.55" r="1.38" fill="#0d3880" />
         </svg>
       </div>
       <h1>Song Swap</h1>
     </header>
 
-    <p class="tagline">Got a silly song stuck in your head? Swap the track, save your sanity 🎵😅</p>
+    <p class="tagline">
+      Change the track in your head. Stuck on a silly earworm? Tap play—we’ll swap it for something just as catchy.
+    </p>
 
     <main>
       <section class="hero" aria-label="Now playing">
+        <div class="reveal-panel">
+          <div class="reveal">
+            <p class="placeholder">Tap play to find out…</p>
+            <div class="meta" id="meta" hidden role="status" aria-live="polite" aria-atomic="true">
+              <p class="title" id="trackTitle"></p>
+            </div>
+          </div>
+        </div>
         <div class="play-wrap">
           <button type="button" class="play-pause" id="playPause" aria-label="Play">
             <svg id="iconPlay" viewBox="0 0 24 24" aria-hidden="true">
@@ -574,16 +623,6 @@
               <path fill="currentColor" d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" />
             </svg>
           </button>
-        </div>
-
-        <div class="reveal-panel">
-          <div class="reveal">
-            <p class="placeholder">Tap play to find out…</p>
-            <div class="meta" id="meta" hidden>
-              <p class="title" id="trackTitle"></p>
-              <p class="artist" id="trackArtist"></p>
-            </div>
-          </div>
         </div>
         <p class="error-banner" id="errorBanner" role="alert"></p>
 
@@ -601,7 +640,6 @@
       <p class="completion" id="completion">
         You heard all 50 earworms in this round. Shuffle the deck for another spin through the pool.
       </p>
-      <p class="counter"><span class="counter-pill" id="counter">50 songs remaining</span></p>
       <div class="actions">
         <button type="button" class="ghost" id="another" aria-label="Another song">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -622,6 +660,8 @@
           Shuffle &amp; play again
         </button>
       </div>
+      <p class="counter"><span class="counter-pill" id="counter">50 songs remaining</span></p>
+      <p class="footer-whisper" aria-label="Made with love">Made with love ❤️</p>
     </footer>
   </div>
 
@@ -705,7 +745,6 @@
     const iconPause = document.getElementById("iconPause");
     const meta = document.getElementById("meta");
     const trackTitle = document.getElementById("trackTitle");
-    const trackArtist = document.getElementById("trackArtist");
     const errorBanner = document.getElementById("errorBanner");
     const counter = document.getElementById("counter");
     const another = document.getElementById("another");
@@ -780,7 +819,6 @@
 
     function showTrack(song) {
       trackTitle.textContent = song.title;
-      trackArtist.textContent = song.artist;
       meta.hidden = false;
       body.classList.add("has-meta");
     }
@@ -920,7 +958,7 @@
 
     function onPlayerError() {
       const badId = currentVideoId;
-      setError("Couldn't load the song — try another!");
+      setError("");
       if (badId) {
         playedIds.delete(badId);
         blockedIds.add(badId);
